@@ -15,7 +15,7 @@ def mcmc_fit(data, model, params, file_name, meta, fit_par):
     Calls the emcee package and does the sampling.
     """
     nvisit = int(meta.nvisit)
-
+    #print("PRIOR ",data.prior)
     # Create the mcmc_res directory
     util.create_res_dir(meta)
 
@@ -42,7 +42,7 @@ def mcmc_fit(data, model, params, file_name, meta, fit_par):
     step_size = read_fit_par.get_step_size(data, params, meta, fit_par)
     pos = [theta + np.array(step_size)*np.random.randn(ndim) for i in range(nwalkers)]
     pos = np.array(pos)
-
+    #print("POS: ",pos)
     sampler.run_mcmc(pos, meta.run_nsteps, progress=True)
 
     # Dump the samples into a file using pickle
@@ -63,16 +63,21 @@ def mcmc_fit(data, model, params, file_name, meta, fit_par):
         thin_corner = 1
 
     samples = sampler.chain[:, nburn::thin_corner, :].reshape((-1, ndim))
-
+    print("bub1")
     # Closing multiprocessing
     if meta.ncpu > 1:
         pool.close()
         pool.join()
+    print("bub2")
 
     # Saving plots
     plots.mcmc_pairs(samples, params, meta, fit_par, data)
-    plots.mcmc_chains(ndim, sampler, 0, labels, meta)
-    plots.mcmc_chains(ndim, sampler, nburn, labels, meta)
+    print("bub2.5")
+    plots.mcmc_chains(ndim, sampler, 0, labels, meta,thin_corner)
+    print("bub3")
+
+    plots.mcmc_chains(ndim, sampler, nburn, labels, meta,thin_corner)
+    print("bub4")
 
     # Determine median and 16th and 84th percentiles
     medians = []
@@ -83,6 +88,7 @@ def mcmc_fit(data, model, params, file_name, meta, fit_par):
         medians.append(q[1])
         errors_lower.append(abs(q[1] - q[0]))
         errors_upper.append(abs(q[2] - q[1]))
+    print("bub5")
 
     # Saving sampling results into txt files
     with (meta.workdir / meta.fitdir / 'mcmc_res' /
@@ -90,16 +96,19 @@ def mcmc_fit(data, model, params, file_name, meta, fit_par):
             .open('w', encoding=OPTIONS["encoding"]) as f_mcmc:
         for row in zip(errors_lower, medians, errors_upper, labels):
             print(f'{row[3]: >8}: {row[1]: >24} {row[0]: >24} {row[2]: >24} ', file=f_mcmc)
+    print("bub6")
 
     updated_params = util.format_params_for_Model(medians, params, nvisit, fixed_array, tied_array, free_array, untied_array)
     if 'uncmulti' in data.s30_myfuncs:
         data.err = updated_params[-1] * data.err_notrescaled
     fit = model.fit(data, updated_params)
     util.append_fit_output(fit, meta, fitter='mcmc', medians=medians)
+    print("bub7")
 
     # Saving plots
     plots.plot_fit_lc2(data, fit, meta, mcmc=True)
     plots.rmsplot(model, data, meta, fitter='mcmc')
+    print("bub8")
 
     if meta.s30_fit_white:
         with (meta.workdir / meta.fitdir / 'white_systematics_mcmc.txt')\
@@ -107,6 +116,7 @@ def mcmc_fit(data, model, params, file_name, meta, fit_par):
             for i in range(len(fit.all_sys)):
                 print(fit.all_sys[i], file=outfile)
             print('Saved white_systematics.txt file for mcmc run')
+    print("bub9")
 
     #samples_auto1 = sampler.get_chain(discard=nburn, flat=True)
     #tau = emcee.autocorr.integrated_time(samples_auto1, quiet=True)

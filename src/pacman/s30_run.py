@@ -72,6 +72,10 @@ def run30(eventlabel: str, workdir: Path, meta=None):
         errs_upper_nested = []
 
     meta = util.log_run_setup(meta)
+    #for i in range(0,len(meta.segment_list)):
+    #    if 'if0e33bjq' in str(meta.segment_list[i]):
+    #        print("FILENAMES, HOPEFULLY", meta.segment_list[i])
+    #        print(i)
 
     # Loop through light curves
     for counter, f in enumerate(files):

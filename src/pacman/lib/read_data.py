@@ -33,7 +33,13 @@ class Data:
 
         iorbit_sp = meta.iorbit_sp
         iexp_orb_sp = meta.iexp_orb_sp
-
+        #if meta.remove_specific_exp:
+        #    filelist_name = meta.workdir / "filelist.txt"
+        #    filelist = ascii.read(filelist_name)
+        #    used_segment_list = filelist['filenames'].value
+        #    scan_list = filelist['scan'].value
+        #    used_segment_list = used_segment_list [scan_list>-1]
+        #print(len(used_segment_list))
         #####################################
         # Removes first exposure from each orbit
         # The index where the orbit changes is saved in meta.new_orbit_idx_sp
@@ -47,6 +53,9 @@ class Data:
             iexp_orb_sp = iexp_orb_sp[leave_ind]
             iexp_orb_sp -= 1 #because we removed iexp_orb = 0 and want the first one in an orbit to be 0 again
             print(f'Removed {sum(~leave_ind)} exposures because they were the first exposures in the orbit.')
+            #if meta.remove_specific_exp:
+            #    print(len(leave_ind), len(used_segment_list))
+            #    used_segment_list = used_segment_list[leave_ind]
         else:
             print('Leaving the first exposures in every orbit.')
 
@@ -62,6 +71,8 @@ class Data:
                 iorbit_sp = iorbit_sp[leave_ind]
                 iexp_orb_sp = iexp_orb_sp[leave_ind]
                 print(f'Removed {sum(~leave_ind)} exposures because they were the first orbit in the visit.')
+                #if meta.remove_specific_exp:
+                #    used_segment_list = used_segment_list[leave_ind]
         elif len(meta.remove_which_orb) != 1 and meta.remove_first_orb:
             if meta.remove_first_orb:
                 masks_orb = []
@@ -74,6 +85,8 @@ class Data:
                 iorbit_sp = iorbit_sp[leave_ind]
                 iexp_orb_sp = iexp_orb_sp[leave_ind]
                 print(f'Removed {sum(~leave_ind)} exposures because they were the first orbit in the visit.')
+                #if meta.remove_specific_exp:
+                #    used_segment_list = used_segment_list[leave_ind]
         else:
             print('Leaving the first orbit in every visit.')
 
@@ -117,6 +130,15 @@ class Data:
             ind = (iorbit_sp == 0)
             t_delay[ind] = 1.
 
+        #if meta.remove_specific_exp:
+        #    #d = [d_specific for idx_specific, d_specific in enumerate(d) if all(exp_specific not in str(used_segment_list[idx_specific]) for exp_specific in meta.remove_which_exp)]
+        #    leave_exp_ind = [all(exp_specific not in str(used_segment_list[idx_specific]) for exp_specific in meta.remove_which_exp) for idx_specific in range(len(d))]
+        ##    d = d[leave_exp_ind]
+        #    iorbit_sp = iorbit_sp[leave_exp_ind]
+        #    iexp_orb_sp = iexp_orb_sp[leave_exp_ind]
+        #    rowshift = rowshift[leave_exp_ind]
+        #    print(f'Removed {sum(~np.array(leave_exp_ind))} exposures because you flagged them in obs_par.')
+
         orb_num = d['iorbit'].value
         vis_num = d['ivisit'].value
         t_vis = d['t_visit'].value
@@ -132,6 +154,11 @@ class Data:
 
         nvisit = int(meta.nvisit)
         norbit = int(meta.norbit)
+
+        #for i in range(0,len(flux)):
+        #    if vis_num[i]==4:
+        #        rowshift[i]=0
+        #print(rowshift)
 
         # TODO: FIXME SZ If white it should take wavelength integrated limb darking from file not just at 1.4 micron
         if meta.s30_fit_white:

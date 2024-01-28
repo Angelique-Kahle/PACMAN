@@ -1095,7 +1095,7 @@ def plot_fit_lc2(data, fit, meta, mcmc=False, nested=False):
 
     # NOTE: Add labels/set axes
     # xlo, xhi = np.min(model.phase)*0.9, np.max(model.phase)*1.1
-    xlo, xhi = -0.1, 0.1
+    xlo, xhi = -0.06, 0.06#-0.1, 0.1
     ax[0].set_xlim(xlo, xhi)
     ax[0].set_ylabel("Relative Flux")
 
@@ -1104,7 +1104,11 @@ def plot_fit_lc2(data, fit, meta, mcmc=False, nested=False):
     ax[0].text(0.85, 0.29,
                r'$\chi^2_{\nu}$:    ' + '{0:0.2f}'.format(fit.chi2red) + '\n'
                + 'obs. rms:  ' + '{0:0.1f}'.format(fit.rms) + '\n'
-               + 'exp. rms:  ' + '{0:0.1f}'.format(fit.rms_predicted),
+               + 'exp. rms:  ' + '{0:0.1f}'.format(fit.rms_predicted) + '\n'
+               + 'BIC:  ' + '{0:0.1f}'.format(fit.bic) + '\n'
+               + 'BIC_unsc:  ' + '{0:0.1f}'.format(fit.bic_notrescaled) + '\n'
+               + 'BIC_alt:  ' + '{0:0.1f}'.format(fit.bic_alt) + '\n'
+               + 'BIC_alt2:  ' + '{0:0.1f}'.format(fit.bic_alt2),
                verticalalignment='top', horizontalalignment='left',
                transform=ax[0].transAxes, fontsize=12)
 
@@ -1135,11 +1139,11 @@ def plot_fit_lc2(data, fit, meta, mcmc=False, nested=False):
     plt.tight_layout()
 
     if mcmc:
-        plt.savefig(meta.workdir / meta.fitdir / 'fit_lc' / f'mcmc_lc_bin{meta.s30_file_counter}_wvl{meta.wavelength:0.3f}.png')
+        plt.savefig(meta.workdir / meta.fitdir / 'fit_lc' / f'mcmc_lc_bin{meta.s30_file_counter}_wvl{meta.wavelength:0.3f}.png',dpi=300)
     elif nested:
         plt.savefig(meta.workdir / meta.fitdir / 'fit_lc' / f'nested_lc_bin{meta.s30_file_counter}_wvl{meta.wavelength:0.3f}.png')
     else:
-        plt.savefig(meta.workdir / meta.fitdir / 'fit_lc' / f'lsq_lc_bin{meta.s30_file_counter}_wvl{meta.wavelength:0.3f}.png')
+        plt.savefig(meta.workdir / meta.fitdir / 'fit_lc' / f'lsq_lc_bin{meta.s30_file_counter}_wvl{meta.wavelength:0.3f}.png',dpi=300)
     plt.close('all')
     plt.clf()
     gc.collect()
@@ -1421,17 +1425,17 @@ def lsq_rprs(vals, errs, idxs, meta):
     gc.collect()
 
 
-def mcmc_chains(ndim, sampler, nburn, labels, meta):
+def mcmc_chains(ndim, sampler, nburn, labels, meta,thin_corner):
     """Plots the temporal evolution of the MCMC chain."""
     plt.clf()
     fig, axes = plt.subplots(ndim, 1, sharex=True, figsize=(8, ndim))
     if ndim > 1:
         for i in range(0, ndim):
-            axes[i].plot(sampler.chain[:, nburn:, i].T, alpha=0.4)
+            axes[i].plot(sampler.chain[:, nburn::thin_corner, i].T, alpha=0.4)
             # axes[i].yaxis.set_major_locator(MaxNLocator(5))
             axes[i].set_ylabel(labels[i])
     elif ndim == 1:
-        axes.plot(sampler.chain[:, nburn:, 0].T, alpha=0.4)
+        axes.plot(sampler.chain[:, nburn::thin_corner, 0].T, alpha=0.4)
         # axes.yaxis.set_major_locator(MaxNLocator(5))
         axes.set_ylabel(labels)
     fig.tight_layout()

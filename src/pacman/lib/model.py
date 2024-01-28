@@ -60,7 +60,8 @@ class Model:
         # wrong because we binned over several pixels
         self.ln_like = 0.
         self.bic = 0.
-        #self.bic_alt = 0.
+        self.bic_alt = 0.
+        self.bic_alt2 = 0.
         self.params = []
         self.myfuncs = Functions(data, myfuncs)
 
@@ -96,6 +97,8 @@ class Model:
                 # + np.log(2.0*np.pi*(data.err)**2)))
             )
             self.bic = -2. * self.ln_like + data.nfree_param * np.log(data.npoints)
+            self.bic_alt = data.npoints * np.log(1/data.npoints*self.chi2) + data.nfree_param * np.log(data.npoints)#self.chi2 + data.nfree_param * np.log(data.npoints)
+            self.bic_alt2 = self.chi2 + data.nfree_param * np.log(data.npoints)
             #self.bic_alt = self.chi2 + data.nfree_param * np.log(data.npoints)
         else:
             self.ln_like = 0.

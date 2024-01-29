@@ -797,8 +797,8 @@ def rowshift_stretch(meta):
         marker = marker_iterator[visit_plot%len(marker_iterator)]
         color1 = color_iterator1[int(visit_plot/len(marker_iterator))]
         color2 = color_iterator2[int(visit_plot/len(marker_iterator))]
-        ax.scatter(meta.rowshift[(meta.scans_sp==0) & (meta.ivisit_sp==visit_plot)], meta.stretch[(meta.scans_sp==0) & (meta.ivisit_sp==visit_plot)], marker=marker, color=color1, label='forward, visit {0}'.format(visit_plot))
-        ax.scatter(meta.rowshift[(meta.scans_sp==1) & (meta.ivisit_sp==visit_plot)], meta.stretch[(meta.scans_sp==1) & (meta.ivisit_sp==visit_plot)], marker=marker, color=color2, label='reverse, visit {0}'.format(visit_plot))
+        ax.scatter(meta.rowshift[(meta.scans_sp==0) & (meta.ivisit_sp==visit_plot)], meta.stretch[(meta.scans_sp==0) & (meta.ivisit_sp==visit_plot)], marker=marker, color=color1, alpha=0.6, label='forward, visit {0}'.format(visit_plot))
+        ax.scatter(meta.rowshift[(meta.scans_sp==1) & (meta.ivisit_sp==visit_plot)], meta.stretch[(meta.scans_sp==1) & (meta.ivisit_sp==visit_plot)], marker=marker, color=color2, alpha=0.6, label='reverse, visit {0}'.format(visit_plot))
     ax.set_xlabel('rowshift / px')
     ax.set_ylabel('Stretch Scaling Factor')
     plt.legend(fontsize="xx-small")
@@ -1018,10 +1018,25 @@ def save_plot_raw_data(data, meta):
     """Saves the data used for the raw light curve plot."""
     table = Table()
     if data.nvisit > 1:
+        visit_lengths = np.zeros(data.nvisit)
+        #If remove_specific_exp is true, not all visits will have the same number of exposures
+        for i in range(data.nvisit):
+            visit_lengths[i] = len(data.vis_num[data.vis_num == i])
+        max_len = int(max(visit_lengths))
         for i in range(data.nvisit):
             ind = data.vis_num == i
-            table[f't_vis_v{i}'] = np.array(data.t_vis[ind], dtype=np.float64)
-            table[f'flux_v{i}'] = np.array(data.flux[ind], dtype=np.float64)
+            if max_len > len(data.t_vis[ind]):
+                #This is needed if remove_specific_exp is true, as astropy does not allow for differently sized columns
+                pad_len = max_len-len(data.t_vis[ind])
+                t_vis_arr =  np.array(data.t_vis[ind], dtype=np.float64)
+                flux_array = np.array(data.flux[ind], dtype=np.float64)
+                t_vis_append = np.pad(t_vis_arr, (0,pad_len),'constant',constant_values=np.nan)
+                flux_append  = np.pad(flux_array, (0,pad_len),'constant',constant_values=np.nan)
+                table[f't_vis_v{i}'] = t_vis_append
+                table[f'flux_v{i}'] = flux_append
+            else:
+                table[f't_vis_v{i}'] = np.array(data.t_vis[ind], dtype=np.float64)
+                table[f'flux_v{i}'] = np.array(data.flux[ind], dtype=np.float64)
     else:
         table['t_vis'] = np.array(data.t_vis, dtype=np.float64)
         table['flux'] = np.array(data.flux, dtype=np.float64)

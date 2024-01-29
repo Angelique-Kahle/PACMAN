@@ -50,6 +50,8 @@ def lsq_fit(fit_par, data, meta, model, myfuncs, noclip=False):
 
     if not noclip:
         # If user wants to sigma clip but there is nothing to clip:
+        if not (meta.workdir / meta.fitdir / 'fit_lc').exists():
+            (meta.workdir / meta.fitdir / 'fit_lc').mkdir(parents=True)
         if sum(np.ma.getmask(sigma_clip(model.resid, sigma=meta.run_clipsigma, maxiters=1))) == 0:
             clip_idx = []
             if meta.save_fit_lc_plot: plots.plot_fit_lc2(data, model, meta)
@@ -58,7 +60,7 @@ def lsq_fit(fit_par, data, meta, model, myfuncs, noclip=False):
             clip_idx = np.where(np.ma.getmask(sigma_clip(model.resid, sigma=meta.run_clipsigma, maxiters=1))==True)[0]
             print('Outlier Identified: ', len(clip_idx))
             print('Outlier idx: ', clip_idx)
-            if meta.save_fit_lc_plot: plots.plot_fit_lc(data, model, meta)
+            if meta.save_fit_lc_plot: plots.plot_fit_lc2(data, model, meta)
 
     if m.errmsg: print("MPFIT error message", m.errmsg)
 
